@@ -70,7 +70,7 @@ end
 
 def checkout(cart, coupons)
   # binding.pry
-  consolidated_cart = consolidate_cart(cart)
+  # consolidated_cart = consolidate_cart(cart)
   applied_coupons_cart = apply_coupons(consolidated_cart, coupons)
   final_cart = apply_clearance(applied_coupons_cart)
   
