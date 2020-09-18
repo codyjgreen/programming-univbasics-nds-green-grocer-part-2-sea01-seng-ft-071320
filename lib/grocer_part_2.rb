@@ -1,59 +1,75 @@
 require_relative './part_1_solution.rb'
+require 'pry'
+
+# Returns a new Array. 
+# Its members will be a mix of the item Hashes and, where applicable, the "ITEM W/COUPON" Hash. 
+# REMEMBER: This method **should** update cart
 
 def apply_coupons(cart, coupons)
-  i = 0
+  binding.pry
   coupons.each do |coupon|
-    item_with_coupon = find_item_by_name_in_collection(coupon[:item], cart)
-    item_is_in_basket = !!item_with_coupon
-    count_is_big_enough_to_apply = item_is_in_basket && item_with_coupon[:count] >= coupon[:num]
-    if item_is_in_basket and count_is_big_enough_to_apply
-      cart << { item: "#{item_with_coupon[:item]} W/COUPON", 
-                price: coupon[:cost] / coupon[:num], 
-                clearance: item_with_coupon[:clearance],
-                count: coupon[:num]
-              }
-      item_with_coupon[:count] -= coupon[:num]
-    end
-    i += 1
+    item_in_cart = find_item_by_name_in_collection(coupon[:item], cart) 
+    cart_item_w_coupon = find_item_by_name_in_collection(coupon[:item] + " W/COUPON", cart)
+    if cart_item_w_coupon && item_in_cart[:count] >= coupon[:num] 
+        cart_item_w_coupon[:count] += coupon[:num] 
+        item_in_cart[:count] -= coupon[:num] 
+       elsif item_in_cart && item_in_cart[:count] >= coupon[:num]
+        cart << {
+          :item => coupon[:item] + " W/COUPON",
+          :price => coupon[:cost] / coupon[:num],
+          :count => coupon[:num],
+          :clearance => item_in_cart[:clearance]
+        }
+        item_in_cart[:count] -= coupon[:num]
+    end 
   end
   cart
 end
 
+
+# Returns a new Array where every unique item in the original is present but with its price reduced by 20% if its :clearance value is true
+
 def apply_clearance(cart)
-  cart.map do |item|
-    if item[:clearance]
-      item[:price] *= 0.8
+  new_price_array = []
+  cart.each do |item_info|
+    if item_info[:clearance] == true
+      new_price= item_info[:price] - (item_info[:price] * 0.2)
+      new_price_array << {
+        :item => item_info[:item],
+        :price => new_price,
+        :clearance => item_info[:clearance],
+        :count => item_info[:count]
+      }
     end
-    item
   end
+  new_price_array
 end
 
-# def checkout(cart, coupons)
-#   final_cart = apply_clearance(apply_coupons(consolidate_cart(cart), coupons))
+
+ # first create a new consolidated cart using the consolidate_cart method.
+ # We should pass the newly consolidated cart to apply_coupons and then send it to apply_clearance.
+ # With all the discounts applied, we should loop through the "consolidated and discounts-applied" cart and multiply each item Hash's price by its count and accumulate that to a grand total.
+# As one last wrinkle, our grocery store offers a deal for customers buying lots of items. If, after the coupons and discounts are applied, the cart's total is over $100, the customer gets an additional 10% off. Apply this discount when appropriate.
+# Returns a float: a total of the cart
+ 
   
-#   total = 0
 
-#   final_cart.each do |item|
-#     total += item[:price] * item[:count]
-#   end
 
-#   total *= 0.9 if total > 100
-
-#   total.round(2)
-# end
 
 def checkout(cart, coupons)
- consolidated_cart = consolidate_cart(cart)
- applied_coupons_cart = apply_coupons(consolidated_cart, coupons)
- final_cart = apply_clearance(applied_coupons_cart)
- total = 0
- counter = 0
- while counter < final_cart.length
-   total += final_cart[counter][:price] * final_cart[counter][:count]
-   counter += 1
- end
- if total > 100
-   total -= (total * 0.1)
- end
- total
+  # binding.pry
+  consolidated_cart = consolidate_cart(cart)
+  applied_coupons_cart = apply_coupons(consolidated_cart, coupons)
+  final_cart = apply_clearance(applied_coupons_cart)
+  
+  total = 0
+  counter = 0
+  while counter < final_cart.length
+    total += final_cart[counter][:price] * final_cart[counter][:count]
+    counter += 1
+  end
+  if total > 100
+    total -= (total * 0.1)
+  end
+  total
 end
